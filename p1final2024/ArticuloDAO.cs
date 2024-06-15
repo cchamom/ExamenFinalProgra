@@ -1,67 +1,76 @@
-﻿using MySql.Data.MySqlClient;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace p1final2024
 {
     public class ArticuloDAO
     {
-        private string connectionString = "server=sql5.freesqldatabase.com;" +
-            "user=sql5712512;" +
-            "database=sql5712512;" +
-            "port=3306;" +
-            "password=rUpYP1VwYa";
+        private string connectionString = "DESKTOP-PQBRDPK\\SQLEXPRESS" + // Actualiza esto con la dirección de tu servidor SQL Server
+            "Database=ArticulosDB;" +      // Nombre de la base de datos
+            "User Id=Cristian Chamo;" +            // Usuario de SQL Server
+            "Password=06062005;" +           // Contraseña
+            "TrustServerCertificate=True;";       // Opcional: necesario para conexiones seguras sin un certificado SSL válido
 
         public ArticuloDAO()
         {
-            
         }
 
         public void Create(Articulo articulo)
         {
-            using (MySqlConnection conn = new MySqlConnection(conectionString))
+            try
             {
-                conn.Open();
-                string query = "INSERT INTO articulos (nombre, descripcion, precio, imagen) VALUES (@nombre, @descripcion, @precio, @imagen)";
-                using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                using (SqlConnection conn = new SqlConnection(connectionString))
                 {
-                    cmd.Parameters.AddWithValue("@nombre", articulo.Nombre);
-                    cmd.Parameters.AddWithValue("@descripcion", articulo.Descripcion);
-                    cmd.Parameters.AddWithValue("@precio", articulo.Precio);
-                    cmd.Parameters.AddWithValue("@imagen", articulo.Imagen);
-                    cmd.ExecuteNonQuery();
+                    conn.Open();
+                    string query = "INSERT INTO articulos (nombre, descripcion, precio, imagen) VALUES (@nombre, @descripcion, @precio, @imagen)";
+                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@nombre", articulo.Nombre);
+                        cmd.Parameters.AddWithValue("@descripcion", articulo.Descripcion);
+                        cmd.Parameters.AddWithValue("@precio", articulo.Precio);
+                        cmd.Parameters.AddWithValue("@imagen", articulo.Imagen);
+                        cmd.ExecuteNonQuery();
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error al crear el artículo: " + ex.Message);
             }
         }
 
         public Articulo Read(int id)
         {
-            using (MySqlConnection conn = new MySqlConnection(connectionString))
+            try
             {
-                conn.Open();
-                string query = "SELECT * FROM articulos WHERE id = @id";
-                using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                using (SqlConnection conn = new SqlConnection(connectionString))
                 {
-                    cmd.Parameters.AddWithValue("@id", id);
-                    using (MySqlDataReader reader = cmd.ExecuteReader())
+                    conn.Open();
+                    string query = "SELECT * FROM articulos WHERE id = @id";
+                    using (SqlCommand cmd = new SqlCommand(query, conn))
                     {
-                        if (reader.Read())
+                        cmd.Parameters.AddWithValue("@id", id);
+                        using (SqlDataReader reader = cmd.ExecuteReader())
                         {
-                            return new Articulo
+                            if (reader.Read())
                             {
-                                Id = reader.GetInt32("id"),
-                                Nombre = reader.GetString("nombre"),
-                                Descripcion = reader.GetString("descripcion"),
-                                Precio = reader.GetDecimal("precio"),
-                                Imagen = reader["image"] as byte[]
-                            };
+                                return new Articulo
+                                {
+                                    Id = reader.GetInt32(reader.GetOrdinal("id")),
+                                    Nombre = reader.GetString(reader.GetOrdinal("nombre")),
+                                    Descripcion = reader.GetString(reader.GetOrdinal("descripcion")),
+                                    Precio = reader.GetDecimal(reader.GetOrdinal("precio")),
+                                    Imagen = reader["imagen"] as byte[]
+                                };
+                            }
                         }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error al leer el artículo: " + ex.Message);
             }
             return null;
         }
@@ -69,61 +78,92 @@ namespace p1final2024
         public List<Articulo> ReadAll()
         {
             List<Articulo> articulos = new List<Articulo>();
-            using (MySqlConnection conn = new MySqlConnection(connectionString))
+            try
             {
-                conn.Open();
-                string query = "SELECT * FROM articulos";
-                using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                using (SqlConnection conn = new SqlConnection(connectionString))
                 {
-                    using (MySqlDataReader reader = cmd.ExecuteReader())
+                    conn.Open();
+                    string query = "SELECT * FROM articulos";
+                    using (SqlCommand cmd = new SqlCommand(query, conn))
                     {
-                        while (reader.Read())
+                        using (SqlDataReader reader = cmd.ExecuteReader())
                         {
-                            articulos.Add(new Articulo
+                            while (reader.Read())
                             {
-                                Id = reader.GetInt32("id"),
-                                Nombre = reader.GetString("nombre"),
-                                Descripcion = reader.GetString("descripcion"),
-                                Precio = reader.GetDecimal("precio"),
-                                Imagen = reader["imagen"] as byte[]
-                            });
+                                articulos.Add(new Articulo
+                                {
+                                    Id = reader.GetInt32(reader.GetOrdinal("id")),
+                                    Nombre = reader.GetString(reader.GetOrdinal("nombre")),
+                                    Descripcion = reader.GetString(reader.GetOrdinal("descripcion")),
+                                    Precio = reader.GetDecimal(reader.GetOrdinal("precio")),
+                                    Imagen = reader["imagen"] as byte[]
+                                });
+                            }
                         }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error al leer todos los artículos: " + ex.Message);
             }
             return articulos;
         }
 
         public void Update(Articulo articulo)
         {
-            using (MySqlConnection conn = new MySqlConnection(connectionString))
+            try
             {
-                conn.Open();
-                string query = "UPDATE articulo SET nombre = @nombre, descripcion = @descripcion, precio = @precio, imagen = @imagen WHERE id = @id";
-                using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                using (SqlConnection conn = new SqlConnection(connectionString))
                 {
-                    cmd.Parameters.AddWithValue("@nombre", articulo.Nombre);
-                    cmd.Parameters.AddWithValue("@descripcion", articulo.Descripcion);
-                    cmd.Parameters.AddWithValue("@precio", articulo.Precio);
-                    cmd.Parameters.AddWithValue("@image", articulo.Imagen);
-                    cmd.Parameters.AddWithValue("@id", articulo.Id);
-                    cmd.ExecuteNonQuery();
+                    conn.Open();
+                    string query = "UPDATE articulos SET nombre = @nombre, descripcion = @descripcion, precio = @precio, imagen = @imagen WHERE id = @id";
+                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@nombre", articulo.Nombre);
+                        cmd.Parameters.AddWithValue("@descripcion", articulo.Descripcion);
+                        cmd.Parameters.AddWithValue("@precio", articulo.Precio);
+                        cmd.Parameters.AddWithValue("@imagen", articulo.Imagen);
+                        cmd.Parameters.AddWithValue("@id", articulo.Id);
+                        cmd.ExecuteNonQuery();
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error al actualizar el artículo: " + ex.Message);
             }
         }
 
         public void Delete(int id)
         {
-            using (MySqlConnection conn = new MySqlConnection(connectionString))
+            try
             {
-                conn.Open();
-                string query = "DELETE  articulos WHERE id = @id";
-                using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                using (SqlConnection conn = new SqlConnection(connectionString))
                 {
-                    cmd.Parameters.AddWithValue("@id", id);
-                    cmd.ExecuteNonQuery();
+                    conn.Open();
+                    string query = "DELETE FROM articulos WHERE id = @id";
+                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@id", id);
+                        cmd.ExecuteNonQuery();
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error al eliminar el artículo: " + ex.Message);
+            }
         }
+    }
+
+    // Definición de la clase Articulo
+    public class Articulo
+    {
+        public int Id { get; set; }
+        public string Nombre { get; set; }
+        public string Descripcion { get; set; }
+        public decimal Precio { get; set; }
+        public byte[] Imagen { get; set; }
     }
 }
